@@ -3,9 +3,11 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import Message from "./models/messageModel.js";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 
 dotenv.config();
 
@@ -17,6 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server is running...");
@@ -35,11 +38,15 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  socket.on("send_message", (data) => {
-    console.log("Message Received:", data);
+  socket.on("send_message", async (data) => {
 
-    io.emit("receive_message", data);
-  });
+  console.log("Message Received:", data);
+
+  const newMessage = await Message.create(data);
+
+  io.emit("receive_message", newMessage);
+
+});
 
   socket.on("disconnect", () => {
     console.log(`User Disconnected: ${socket.id}`);

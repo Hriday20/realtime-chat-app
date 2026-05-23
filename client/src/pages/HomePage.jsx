@@ -1,11 +1,28 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import axios from "axios";
 
 const socket = io("http://localhost:5002");
 
 function HomePage() {
   const [message, setMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const { data } = await axios.get(
+          "http://localhost:5002/api/messages"
+        );
+
+        setMessageList(data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -25,6 +42,7 @@ function HomePage() {
     if (message.trim() === "") return;
 
     const messageData = {
+      sender: "Hriday",
       message,
       time: new Date().toLocaleTimeString(),
     };
@@ -47,7 +65,12 @@ function HomePage() {
               key={index}
               className="bg-blue-600 p-3 rounded-lg mb-3"
             >
+              <p className="font-semibold">
+                {msg.sender}
+              </p>
+
               <p>{msg.message}</p>
+
               <span className="text-xs text-gray-200">
                 {msg.time}
               </span>
