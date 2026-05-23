@@ -35,23 +35,48 @@ const io = new Server(httpServer, {
   },
 });
 
+let onlineUsers = [];
+
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
+  socket.on("join_chat", (username) => {
+    socket.username = username;
+
+    onlineUsers.push(username);
+
+    io.emit("online_users", onlineUsers);
+
+    console.log(`${username} joined chat`);
+  });
+
   socket.on("send_message", async (data) => {
+    console.log("Message Received:", data);
 
-  console.log("Message Received:", data);
+    const newMessage = await Message.create(data);
 
-  const newMessage = await Message.create(data);
+    io.emit("receive_message", newMessage);
+  });
 
-  io.emit("receive_message", newMessage);
+  socket.on("typing", (data) => {
+    socket.broadcast.emit("show_typing", data);
+  });
 
-});
+  socket.on("stop_typing", () => {
+    socket.broadcast.emit("hide_typing");
+  });
 
   socket.on("disconnect", () => {
     console.log(`User Disconnected: ${socket.id}`);
+
+    onlineUsers = onlineUsers.filter(
+      (user) => user !== socket.username
+    );
+
+    io.emit("online_users", onlineUsers);
   });
 });
+
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
