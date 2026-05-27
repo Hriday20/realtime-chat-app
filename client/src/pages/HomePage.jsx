@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const socket = io("http://localhost:5002");
 
 function HomePage() {
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+
+  const storedUser = JSON.parse(
+    localStorage.getItem("chatUser")
+  );
+
   const [message, setMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
   const [typingUser, setTypingUser] = useState("");
@@ -14,13 +20,19 @@ function HomePage() {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
-    const name = prompt("Enter your username");
 
-    if (name) {
-      setUsername(name);
+    if (!storedUser) {
 
-      socket.emit("join_chat", name);
+      navigate("/login");
+
+      return;
+
     }
+
+    socket.emit("join_chat", storedUser.name);
+
+    // eslint-disable-next-line
+
   }, []);
 
   useEffect(() => {
@@ -78,7 +90,7 @@ function HomePage() {
     if (message.trim() === "") return;
 
     const messageData = {
-      sender: username,
+      sender: storedUser.name,
       message,
       time: new Date().toLocaleTimeString(),
     };
@@ -93,11 +105,17 @@ function HomePage() {
   const handleTyping = (e) => {
     setMessage(e.target.value);
 
-    socket.emit("typing", username);
+    socket.emit("typing", storedUser.name);
 
     setTimeout(() => {
       socket.emit("stop_typing");
     }, 1000);
+  };
+
+  const logoutHandler = () => {
+    localStorage.removeItem("chatUser");
+
+    navigate("/login");
   };
 
   return (
@@ -114,16 +132,25 @@ function HomePage() {
             </p>
 
             <h2 className="text-xl font-semibold">
-              {username}
+              {storedUser?.name}
             </h2>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
 
-            <span className="text-sm text-gray-300">
-              {onlineUsers.length} Online
-            </span>
+              <span className="text-sm text-gray-300">
+                {onlineUsers.length} Online
+              </span>
+            </div>
+
+            <button
+              onClick={logoutHandler}
+              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-sm"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
@@ -149,14 +176,14 @@ function HomePage() {
             <div
               key={index}
               className={`mb-3 flex ${
-                msg.sender === username
+                msg.sender === storedUser?.name
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
               <div
                 className={`max-w-xs p-3 rounded-2xl shadow-md ${
-                  msg.sender === username
+                  msg.sender === storedUser?.name
                     ? "bg-blue-600"
                     : "bg-gray-700"
                 }`}

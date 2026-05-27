@@ -43,8 +43,10 @@ io.on("connection", (socket) => {
   socket.on("join_chat", (username) => {
     socket.username = username;
 
-    onlineUsers.push(username);
-
+    if (!onlineUsers.includes(username)) {
+      onlineUsers.push(username);
+    }
+    
     io.emit("online_users", onlineUsers);
 
     console.log(`${username} joined chat`);
