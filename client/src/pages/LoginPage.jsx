@@ -3,8 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL ||
-  "http://localhost:5002";
+  import.meta.env.VITE_BACKEND_URL;
 
 function LoginPage() {
   const navigate = useNavigate();

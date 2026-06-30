@@ -8,8 +8,7 @@ import MessageBubble from "../components/MessageBubble";
 import MessageInput from "../components/MessageInput";
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL ||
-  "http://localhost:5002";
+  import.meta.env.VITE_BACKEND_URL;
 
 const socket = io(BACKEND_URL);
 
@@ -133,7 +132,9 @@ function HomePage() {
           <div className="bg-gray-800/80 rounded-2xl p-5 border border-gray-700 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-800 flex items-center justify-center font-bold text-lg shadow-md">
-                {storedUser?.name?.charAt(0).toUpperCase()}
+                {storedUser?.name
+                  ?.charAt(0)
+                  .toUpperCase()}
               </div>
 
               <div>
