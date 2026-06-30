@@ -10,7 +10,6 @@ import authRoutes from "./routes/authRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 
 dotenv.config();
-
 connectDB();
 
 const app = express();
@@ -26,7 +25,6 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5002;
-
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
@@ -40,18 +38,20 @@ let onlineUsers = [];
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
+  // JOIN CHAT (GLOBAL)
   socket.on("join_chat", (username) => {
     socket.username = username;
 
     if (!onlineUsers.includes(username)) {
       onlineUsers.push(username);
     }
-    
+
     io.emit("online_users", onlineUsers);
 
     console.log(`${username} joined chat`);
   });
 
+  // SEND MESSAGE (GLOBAL)
   socket.on("send_message", async (data) => {
     console.log("Message Received:", data);
 
@@ -60,6 +60,7 @@ io.on("connection", (socket) => {
     io.emit("receive_message", newMessage);
   });
 
+  // TYPING
   socket.on("typing", (data) => {
     socket.broadcast.emit("show_typing", data);
   });
@@ -68,6 +69,7 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("hide_typing");
   });
 
+  // DISCONNECT
   socket.on("disconnect", () => {
     console.log(`User Disconnected: ${socket.id}`);
 
@@ -78,7 +80,6 @@ io.on("connection", (socket) => {
     io.emit("online_users", onlineUsers);
   });
 });
-
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

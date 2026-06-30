@@ -3,6 +3,10 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import OnlineUsers from "../components/OnlineUsers";
+import MessageBubble from "../components/MessageBubble";
+import MessageInput from "../components/MessageInput";
+
 const socket = io("http://localhost:5002");
 
 function HomePage() {
@@ -20,19 +24,14 @@ function HomePage() {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
-
     if (!storedUser) {
-
       navigate("/login");
-
       return;
-
     }
 
     socket.emit("join_chat", storedUser.name);
 
     // eslint-disable-next-line
-
   }, []);
 
   useEffect(() => {
@@ -52,10 +51,6 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Connected:", socket.id);
-    });
-
     socket.on("receive_message", (data) => {
       setMessageList((prev) => [...prev, data]);
     });
@@ -86,7 +81,7 @@ function HomePage() {
     });
   }, [messageList, typingUser]);
 
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (message.trim() === "") return;
 
     const messageData = {
@@ -96,7 +91,6 @@ function HomePage() {
     };
 
     socket.emit("send_message", messageData);
-
     socket.emit("stop_typing");
 
     setMessage("");
@@ -114,95 +108,96 @@ function HomePage() {
 
   const logoutHandler = () => {
     localStorage.removeItem("chatUser");
-
     navigate("/login");
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center p-10">
-      <h1 className="text-5xl font-bold mb-8 text-blue-500">
-        Real-Time Chat
-      </h1>
-
-      <div className="w-full max-w-2xl bg-gray-900 p-6 rounded-3xl shadow-2xl border border-gray-800">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-gray-400 text-sm">
-              Logged in as
-            </p>
-
-            <h2 className="text-xl font-semibold">
-              {storedUser?.name}
+    <div className="h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white flex overflow-hidden">
+      {/* Left Sidebar */}
+      <div className="w-72 h-screen bg-black/30 backdrop-blur-md border-r border-gray-800 p-5 flex flex-col justify-between">
+        <div>
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              ChatSphere
             </h2>
+
+            <p className="text-gray-500 text-sm mt-1">
+              Real-time communication
+            </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="bg-gray-800/80 rounded-2xl p-5 border border-gray-700 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-800 flex items-center justify-center font-bold text-lg shadow-md">
+                {storedUser?.name?.charAt(0).toUpperCase()}
+              </div>
 
-              <span className="text-sm text-gray-300">
-                {onlineUsers.length} Online
-              </span>
-            </div>
-
-            <button
-              onClick={logoutHandler}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-sm"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-4 bg-gray-950 border border-gray-800 rounded-2xl p-3">
-          <p className="text-sm text-gray-400 mb-2">
-            Online Users
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            {onlineUsers.map((user, index) => (
-              <span
-                key={index}
-                className="bg-gray-800 px-3 py-1 rounded-full text-sm"
-              >
-                {user}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="h-[500px] overflow-y-auto bg-gray-950 border border-gray-800 rounded-2xl p-4 mb-4">
-          {messageList.map((msg, index) => (
-            <div
-              key={index}
-              className={`mb-3 flex ${
-                msg.sender === storedUser?.name
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-xs p-3 rounded-2xl shadow-md ${
-                  msg.sender === storedUser?.name
-                    ? "bg-blue-600"
-                    : "bg-gray-700"
-                }`}
-              >
-                <p className="font-semibold text-sm mb-1">
-                  {msg.sender}
+              <div>
+                <p className="text-gray-400 text-xs">
+                  Logged in as
                 </p>
 
-                <p>{msg.message}</p>
-
-                <span className="text-xs text-gray-200 block mt-1">
-                  {msg.time}
-                </span>
+                <h3 className="text-lg font-semibold">
+                  {storedUser?.name}
+                </h3>
               </div>
             </div>
-          ))}
+          </div>
+        </div>
+
+        <button
+          onClick={logoutHandler}
+          className="w-full bg-red-600 hover:bg-red-700 p-3 rounded-xl font-semibold transition"
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Main Chat */}
+      <div className="flex-1 p-6 flex flex-col overflow-hidden">
+        <div className="bg-black/20 backdrop-blur-md border border-gray-800 rounded-3xl p-5 mb-4 shadow-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">
+                Global Chat Room
+              </h1>
+
+              <p className="text-gray-400 mt-1">
+                Chat with everyone online
+              </p>
+            </div>
+
+            <div className="px-4 py-2 bg-gray-800 rounded-xl text-sm">
+              {onlineUsers.length} Online
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 bg-black/20 backdrop-blur-md border border-gray-800 rounded-3xl p-5 overflow-y-auto mb-4 min-h-0 shadow-xl">
+          {messageList.length === 0 ? (
+            <div className="h-full flex flex-col justify-center items-center text-gray-500">
+              <div className="text-6xl mb-5">💬</div>
+
+              <h2 className="text-3xl font-bold mb-3">
+                No messages yet
+              </h2>
+
+              <p className="text-gray-400">
+                Be the first one to start chatting.
+              </p>
+            </div>
+          ) : (
+            messageList.map((msg, index) => (
+              <MessageBubble
+                key={index}
+                msg={msg}
+                currentUser={storedUser?.name}
+              />
+            ))
+          )}
 
           {typingUser && (
-            <div className="text-sm text-gray-400 italic mb-2">
+            <div className="text-sm text-blue-300 italic px-2">
               {typingUser} is typing...
             </div>
           )}
@@ -210,23 +205,14 @@ function HomePage() {
           <div ref={chatEndRef}></div>
         </div>
 
-        <div className="flex gap-3">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            value={message}
-            onChange={handleTyping}
-            className="flex-1 p-4 rounded-2xl bg-gray-800 border border-gray-700 outline-none focus:border-blue-500"
-          />
-
-          <button
-            onClick={sendMessage}
-            className="bg-blue-600 px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition"
-          >
-            Send
-          </button>
-        </div>
+        <MessageInput
+          message={message}
+          handleTyping={handleTyping}
+          sendMessage={sendMessage}
+        />
       </div>
+
+      <OnlineUsers onlineUsers={onlineUsers} />
     </div>
   );
 }
