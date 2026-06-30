@@ -7,7 +7,11 @@ import OnlineUsers from "../components/OnlineUsers";
 import MessageBubble from "../components/MessageBubble";
 import MessageInput from "../components/MessageInput";
 
-const socket = io("http://localhost:5002");
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  "http://localhost:5002";
+
+const socket = io(BACKEND_URL);
 
 function HomePage() {
   const navigate = useNavigate();
@@ -38,7 +42,7 @@ function HomePage() {
     const fetchMessages = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:5002/api/messages"
+          `${BACKEND_URL}/api/messages`
         );
 
         setMessageList(data);

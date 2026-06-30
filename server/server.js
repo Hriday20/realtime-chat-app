@@ -14,7 +14,17 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+const CLIENT_URL =
+  process.env.CLIENT_URL ||
+  "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: CLIENT_URL,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
@@ -29,7 +39,9 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: CLIENT_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -38,7 +50,6 @@ let onlineUsers = [];
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  // JOIN CHAT (GLOBAL)
   socket.on("join_chat", (username) => {
     socket.username = username;
 
@@ -51,7 +62,6 @@ io.on("connection", (socket) => {
     console.log(`${username} joined chat`);
   });
 
-  // SEND MESSAGE (GLOBAL)
   socket.on("send_message", async (data) => {
     console.log("Message Received:", data);
 
@@ -60,7 +70,6 @@ io.on("connection", (socket) => {
     io.emit("receive_message", newMessage);
   });
 
-  // TYPING
   socket.on("typing", (data) => {
     socket.broadcast.emit("show_typing", data);
   });
@@ -69,7 +78,6 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("hide_typing");
   });
 
-  // DISCONNECT
   socket.on("disconnect", () => {
     console.log(`User Disconnected: ${socket.id}`);
 

@@ -2,6 +2,10 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  "http://localhost:5002";
+
 function SignupPage() {
   const navigate = useNavigate();
 
@@ -23,7 +27,7 @@ function SignupPage() {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:5002/api/auth/register",
+        `${BACKEND_URL}/api/auth/register`,
         formData
       );
 
